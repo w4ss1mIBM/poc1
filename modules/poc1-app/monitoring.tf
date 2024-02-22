@@ -1,37 +1,37 @@
-# IAM Role for EC2
-resource "aws_iam_role" "ec2_cloudwatch_ssm_role" {
-  name = "ec2_cloudwatch_ssm_role"
+# # IAM Role for EC2
+# resource "aws_iam_role" "ec2_cloudwatch_ssm_role" {
+#   name = "ec2_cloudwatch_ssm_role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Effect = "Allow"
-        Sid    = ""
-      },
-    ]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Principal = {
+#           Service = "ec2.amazonaws.com"
+#         }
+#         Effect = "Allow"
+#         Sid    = ""
+#       },
+#     ]
+#   })
+# }
 
-resource "aws_iam_role_policy_attachment" "cloudwatch_agent_server_policy" {
-  role       = aws_iam_role.ec2_cloudwatch_ssm_role.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-}
+# resource "aws_iam_role_policy_attachment" "cloudwatch_agent_server_policy" {
+#   role       = aws_iam_role.ec2_cloudwatch_ssm_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+# }
 
-resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
-  role       = aws_iam_role.ec2_cloudwatch_ssm_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
+# resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
+#   role       = aws_iam_role.ec2_cloudwatch_ssm_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+# }
 
-#EC2 instance profile
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "ec2_cloudwatch_ssm_profile"
-  role = aws_iam_role.ec2_cloudwatch_ssm_role.name
-}
+# #EC2 instance profile
+# resource "aws_iam_instance_profile" "ec2_profile" {
+#   name = "ec2_cloudwatch_ssm_profile"
+#   role = aws_iam_role.ec2_cloudwatch_ssm_role.name
+# }
 
 
 

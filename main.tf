@@ -45,13 +45,4 @@ module "deploy_app_poc1" {
   emails                          = var.emails
   // Ensure to pass any other required variables
 
-  depends_on = [module.terraform_backend]
-}
-module "terraform_backend" {
-  source = "git::https://atc-github.azure.cloud.bmw/BMW-FR-NSC/terraform-back-end-module.git"
-
-  bucket_name         = "app-administration-playground-terraform-tfstate-stage-v1"
-  dynamodb_table_name = "terraform-state-locking-playground-s3-tfstate-stage"
-  environment         = "int"
-  force_destroy       = true
 }

@@ -1,0 +1,109 @@
+name: "Provision/Destroy AWS Resources Sequentially"
+
+# Triggers the workflow based on manual input from the GitHub UI, allowing users to specify if they want to provision or destroy resources.
+on:
+  workflow_dispatch:
+    inputs:
+      action_type:
+        description: 'Action Type (provision or destroy)'
+        required: true
+        default: 'provision'
+
+# Sets global environment variables used across all jobs for AWS credentials, Terraform version, and directory paths.
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  TERRAFORM_VERSION: "1.2.5"
+  S3_CREATE_DIR: "./backend"
+  WEB_APP_DIR: "./"
+  TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+  TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+  TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+  TF_BACKEND_DYNAMODB_TABLE: ${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}
+
+jobs:
+  # Initializes the Terraform setup, ensuring the specified version of Terraform is used for subsequent steps.
+  setup:
+    name: Setup Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code # Checks out the repository code to the GitHub Actions runner.
+        uses: actions/checkout@v3
+      - name: Setup Terraform # Installs the specified version of Terraform.
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+  # Manages the Terraform backend, only running during the provisioning process to set up the required infrastructure for state management.
+  manage_tf_backend:
+    name: Create Terraform Backend
+    if: ${{ github.event.inputs.action_type == 'provision' }}
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Initialize Terraform Configuration for Terraform Backend
+        run: terraform init
+        working-directory: ${{ env.S3_CREATE_DIR }}
+      - name: Apply Terraform Configuration # Applies the Terraform configuration to provision the backend resources.
+        run: terraform apply -auto-approve -input=false
+        working-directory: ${{ env.S3_CREATE_DIR }}
+
+  # Provisions or destroys AWS resources based on the action_type input. This job runs after the backend is set up during provisioning.
+  manage_resources:
+    name: Provision or Destroy AWS Resources
+    if: ${{ github.event.inputs.action_type == 'provision' }}
+    needs: manage_tf_backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Initialize Terraform # Initializes Terraform with backend configuration for state management.
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.TF_BACKEND_BUCKET }}" \
+            -backend-config="key=${{ env.TF_BACKEND_KEY }}" \
+            -backend-config="region=${{ env.TF_BACKEND_REGION }}" \
+            -backend-config="dynamodb_table=${{ env.TF_BACKEND_DYNAMODB_TABLE }}" \
+            -backend-config="encrypt=true"
+        working-directory: ${{ env.WEB_APP_DIR }}
+      - name: Apply or Destroy Terraform Configuration # Applies or destroys Terraform configuration based on the action_type.
+        run: terraform apply -auto-approve -input=false
+        working-directory: ${{ env.WEB_APP_DIR }}
+
+  # Destroys AWS resources before the Terraform backend during the destruction process to ensure no dependencies are left behind.
+  destroy_resources:
+    name: Destroy AWS Resources
+    if: ${{ github.event.inputs.action_type == 'destroy' }}
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Initialize Terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.TF_BACKEND_BUCKET }}" \
+            -backend-config="key=${{ env.TF_BACKEND_KEY }}" \
+            -backend-config="region=${{ env.TF_BACKEND_REGION }}" \
+            -backend-config="dynamodb_table=${{ env.TF_BACKEND_DYNAMODB_TABLE }}" \
+            -backend-config="encrypt=true"
+        working-directory: ${{ env.WEB_APP_DIR }}
+      - name: Destroy Terraform Configuration # Destroys the AWS resources before attempting to destroy the backend.
+        run: terraform destroy -auto-approve
+        working-directory: ${{ env.WEB_APP_DIR }}
+
+  # Destroys the Terraform backend after all resources have been successfully destroyed.
+  destroy_tf_backend:
+    name: Destroy Terraform Backend
+    if: ${{ github.event.inputs.action_type == 'destroy' }}
+    needs: destroy_resources
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Initialize Terraform Configuration for Terraform Backend
+        run: terraform init
+        working-directory: ${{ env.S3_CREATE_DIR }}
+      - name: Destroy Terraform Configuration # Cleans up the Terraform backend infrastructure.
+        run: terraform destroy -auto-approve
+        working-directory: ${{ env.S3_CREATE_DIR }}

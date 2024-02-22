@@ -1,4 +1,4 @@
-name: "Manage AWS Resources"
+name: "Provision/Destroy AWS Resources Without Backend"
 
 # Trigger the workflow manually from GitHub UI with an input
 on:
@@ -8,6 +8,7 @@ on:
         description: 'Action Type (provision or destroy)'
         required: true
         default: 'provision'
+
 
 # Global environment variables used across all jobs
 env:
@@ -24,33 +25,20 @@ env:
   TF_BACKEND_DYNAMODB_TABLE: ${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}
 
 jobs:
-  setup:
-    name: Setup Terraform
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
-
-      - name: Cache Terraform Plugins
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.terraform.d/plugin-cache
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
-
+  # Job for creating AWS ressources
   manage_resources:
     if: ${{ github.event.inputs.action_type == 'provision' || github.event.inputs.action_type == 'destroy' }}
     name: Provision or Destroy AWS Resources
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIRECTORY: ${{ env.WEB_APP_DIR }}
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3 # Checks out the repository code to the runner
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2 # Sets up specified Terraform version
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
       - uses: actions/checkout@v3
       - name: Initialize Terraform
         run: |
