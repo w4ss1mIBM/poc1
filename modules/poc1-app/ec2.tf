@@ -27,6 +27,7 @@ resource "aws_instance" "windows_ec2" {
   key_name               = var.key_name # Assuming 'key_name' is defined in variables.tf
   subnet_id              = data.aws_subnet.app_subnet.id
   vpc_security_group_ids = [aws_security_group.allow_tls.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   root_block_device {
     volume_size = var.root_volume_size # Correcting a typo for consistency
