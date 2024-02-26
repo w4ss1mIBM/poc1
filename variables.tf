@@ -138,12 +138,30 @@ variable "sg_protocol" {
   type        = string
   default     = "tcp"
 }
+variable "ec2_ingress_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks for EC2 security group ingress."
+     default     = ["127.1.0.1/27, 1.1.1.1/27"]
+}
 
+variable "ec2_egress_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks for EC2 security group egress."
+   default     = ["127.1.0.1/27, 1.1.1.1/27"]
+}
+
+
+variable "alb_ingress_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks for ALB security group ingress."
+  default     = ["127.1.0.1/27, 1.1.1.1/27"]
+
+}
 # --------------------------
 # Monitoring Configuration
 # --------------------------
-variable "emails" {
-  description = "List of email addresses to subscribe to the SNS topic."
-  type        = list(string)
-  default     = ["example1@email.com", "example2@email.com"]
-}
+# variable "emails" {
+#   description = "List of email addresses to subscribe to the SNS topic."
+#   type        = list(string)
+#   default     = ["example1@email.com", "example2@email.com"]
+# }

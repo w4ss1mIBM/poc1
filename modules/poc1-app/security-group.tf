@@ -12,7 +12,7 @@ resource "aws_security_group" "allow_tls" {
       from_port   = port.value
       to_port     = port.value
       protocol    = var.sg_protocol
-      cidr_blocks = [data.aws_vpc.selected.cidr_block] # Reference to VPC's CIDR block for the source.
+      cidr_blocks = var.ec2_ingress_cidr_blocks  # Reference to Variable's CIDR block for the source.
     }
   }
 
@@ -24,7 +24,7 @@ resource "aws_security_group" "allow_tls" {
       from_port   = port.value
       to_port     = port.value
       protocol    = var.sg_protocol                    # Ensuring consistency in variable naming.
-      cidr_blocks = [data.aws_vpc.selected.cidr_block] # Using VPC CIDR block for the destination.
+      cidr_blocks = var.ec2_egress_cidr_blocks # Using VPC CIDR block Variable for the destination.
     }
   }
 
@@ -42,7 +42,7 @@ resource "aws_security_group" "alb_security_group" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.selected.cidr_block]
+    cidr_blocks = var.alb_ingress_cidr_blocks
   }
 
   tags = {

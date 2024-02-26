@@ -138,6 +138,26 @@ variable "sg_protocol" {
   default     = "tcp"
 }
 
+variable "ec2_ingress_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks for EC2 security group ingress."
+     default     = ["127.1.0.1/27, 1.1.1.1/27"]
+}
+
+variable "ec2_egress_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks for EC2 security group egress."
+   default     = ["127.1.0.1/27, 1.1.1.1/27"]
+}
+
+
+variable "alb_ingress_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks for ALB security group ingress."
+  default     = ["127.1.0.1/27, 1.1.1.1/27"]
+
+}
+
 # --------------------------
 # Monitoring Configuration
 # --------------------------
