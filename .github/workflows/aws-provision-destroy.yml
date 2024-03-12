@@ -1,4 +1,4 @@
-name: "P/D AWS Resources"
+name: "P/D AWS Resources ${{ github.event.inputs.action_name }}"
 
 # Trigger the workflow manually from GitHub UI with an input
 on:
@@ -22,10 +22,12 @@ env:
   WEB_APP_DIR: "./"
   # Backend configuration
   TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
-  TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
+  TF_BACKEND_KEY: ${{ secrets.AWS_REGION }}
   TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
   TF_BACKEND_DYNAMODB_TABLE: ${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}
-
+  OIDC_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+  OIDC_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
+  OIDC_CLIENT_SECRET: ${{ secrets.OIDC_CLIENT_SECRET }}
 jobs:
   # Job for creating/Destroying AWS ressources
   manage_resources:
@@ -54,7 +56,8 @@ jobs:
       - name: Apply or Destroy Terraform Configuration
         run: |
           if [ "${{ github.event.inputs.action_type }}" == "provision" ]; then
-            terraform apply -auto-approve -input=false
+            terraform apply -auto-approve -input=false   -var="client_id=${{ env.OIDC_CLIENT_ID }}" \
+            -var="client_secret=${{ env.OIDC_CLIENT_SECRET }}"
           else
             terraform destroy -auto-approve
           fi

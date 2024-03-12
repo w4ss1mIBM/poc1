@@ -44,22 +44,22 @@ output "tg_arn" {
 
 ##################################################################################################################################
 # Output the IDs of the created EBS Volumes
-output "ebs_volume_ids" {
-  description = "The IDs of the EBS volumes created for Windows EC2 instances."
-  value       = aws_ebs_volume.ebs_volume_for_windows_ec2[*].id
-}
+# output "ebs_volume_ids" {
+#   description = "The IDs of the EBS volumes created for Windows EC2 instances."
+#   value       = aws_ebs_volume.ebs_volume_for_windows_ec2[*].id
+# }
 
-# Output the attachment details of the EBS Volumes
-output "ebs_volume_attachment_details" {
-  description = "Details of the EBS volume attachments."
-  value = [
-    for attachment in aws_volume_attachment.ebs_att : {
-      instance_id = attachment.instance_id
-      volume_id   = attachment.volume_id
-      device_name = attachment.device_name
-    }
-  ]
-}
+# # Output the attachment details of the EBS Volumes
+# output "ebs_volume_attachment_details" {
+#   description = "Details of the EBS volume attachments."
+#   value = [
+#     for attachment in aws_volume_attachment.ebs_att : {
+#       instance_id = attachment.instance_id
+#       volume_id   = attachment.volume_id
+#       device_name = attachment.device_name
+#     }
+#   ]
+# }
 ##################################################################################################################################
 
 # Output the IDs of the created EC2 instances

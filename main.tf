@@ -13,10 +13,10 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "app-administration-playground-terraform-tfstate-stage-v1"
+    bucket         = "wsa-backend-terraform-tfstate-int"
     key            = "state/int/ec2-tfstate/terraform.tfstate"
     region         = "eu-west-1"
-    dynamodb_table = "terraform-state-locking-playground-s3-tfstate-stage"
+    dynamodb_table = "wsa-terraform-state-locking-int"
     encrypt        = true
   }
 }
@@ -29,7 +29,6 @@ module "deploy_app_poc1" {
   ami_owner                       = var.ami_owner
   instance_type                   = var.instance_type
   key_name                        = var.key_name
-  instance_count                  = var.instance_count
   instance_name_prefix            = var.instance_name_prefix
   cpu_credits                     = var.cpu_credits
   root_volume_size                = var.root_volume_size
@@ -42,7 +41,11 @@ module "deploy_app_poc1" {
   selected_vpc_name               = var.selected_vpc_name
   app_subnet                      = var.app_subnet
   alb_subnet                      = var.alb_subnet
-  emails                          = var.emails
+  alb_ingress_cidr_blocks         = var.alb_ingress_cidr_blocks
+  ec2_egress_cidr_blocks          = var.ec2_egress_cidr_blocks
+  ec2_ingress_cidr_blocks         = var.ec2_ingress_cidr_blocks
+  client_id                       = var.client_id
+  client_secret                   = var.client_secret
   // Ensure to pass any other required variables
 
 }
