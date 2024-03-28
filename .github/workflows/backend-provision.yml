@@ -1,4 +1,4 @@
-name: "(Optional) Provision BackEnd Terraform"
+name: "Provision BackEnd Terraform"
 
 # Trigger the workflow manually from GitHub UI with an input
 on:

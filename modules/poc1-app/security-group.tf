@@ -4,29 +4,26 @@ resource "aws_security_group" "allow_tls" {
   description = "Allow TLS inbound and outbound traffic"
   vpc_id      = data.aws_vpc.selected.id
 
-  # Dynamic block for ingress rules based on variable input.
   dynamic "ingress" {
-    for_each = var.sg_ports_ingress
-    iterator = port
+    for_each = var.sg_ingress_ports
     content {
-      from_port   = port.value
-      to_port     = port.value
-      protocol    = var.sg_protocol
-      cidr_blocks = var.ec2_ingress_cidr_blocks  # Reference to Variable's CIDR block for the source.
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      cidr_blocks = ingress.value.cidr_blocks
     }
   }
 
-  # Dynamic block for egress rules similar to ingress.
   dynamic "egress" {
-    for_each = var.sg_ports_egress
-    iterator = port
+    for_each = var.sg_egress_ports
     content {
-      from_port   = port.value
-      to_port     = port.value
-      protocol    = var.sg_protocol                    # Ensuring consistency in variable naming.
-      cidr_blocks = var.ec2_egress_cidr_blocks # Using VPC CIDR block Variable for the destination.
+      from_port   = egress.value.from_port
+      to_port     = egress.value.to_port
+      protocol    = egress.value.protocol
+      cidr_blocks = egress.value.cidr_blocks
     }
   }
+
 
   tags = {
     Name = "${var.instance_name_prefix}-${var.sg_name}" # Dynamic naming based on variables.
@@ -39,8 +36,8 @@ resource "aws_security_group" "alb_security_group" {
   vpc_id = data.aws_vpc.selected.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = var.alb_ingress_cidr_blocks
   }

@@ -63,3 +63,16 @@ resource "aws_lb_listener" "alb_listener" {
     target_group_arn = aws_lb_target_group.alb_ec2_instance_tg.arn
   }
 }
+
+resource "aws_route53_record" "app_record" {
+  zone_id = "Z05358721UPIUVROSJBSM"
+  name    = "app.webserviceadministration-int.eu-west-1.aws.cloud.bmw"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.alb_private.dns_name
+    zone_id                = aws_lb.alb_private.zone_id
+    evaluate_target_health = true
+  }
+
+}

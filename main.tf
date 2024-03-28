@@ -35,17 +35,13 @@ module "deploy_app_poc1" {
   ebs_size                        = var.ebs_size
   ebs_device_name                 = var.ebs_device_name
   sg_name                         = var.sg_name
-  sg_ports_ingress                = var.sg_ports_ingress
-  sg_ports_egress                 = var.sg_ports_egress
-  sg_protocol                     = var.sg_protocol
   selected_vpc_name               = var.selected_vpc_name
   app_subnet                      = var.app_subnet
   alb_subnet                      = var.alb_subnet
   alb_ingress_cidr_blocks         = var.alb_ingress_cidr_blocks
-  ec2_egress_cidr_blocks          = var.ec2_egress_cidr_blocks
-  ec2_ingress_cidr_blocks         = var.ec2_ingress_cidr_blocks
   client_id                       = var.client_id
   client_secret                   = var.client_secret
-  // Ensure to pass any other required variables
-
+  sg_egress_ports                 = var.sg_egress_ports
+  sg_ingress_ports                = var.sg_ingress_ports
+  certificate_arn                 = var.certificate_arn
 }

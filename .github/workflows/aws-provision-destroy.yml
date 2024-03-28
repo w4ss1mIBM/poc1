@@ -1,4 +1,4 @@
-name: "P/D AWS Resources ${{ github.event.inputs.action_name }}"
+name: "P/D AWS Resources "
 
 # Trigger the workflow manually from GitHub UI with an input
 on:
@@ -22,10 +22,8 @@ env:
   WEB_APP_DIR: "./"
   # Backend configuration
   TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
-  TF_BACKEND_KEY: ${{ secrets.AWS_REGION }}
-  TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+  TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
   TF_BACKEND_DYNAMODB_TABLE: ${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}
-  OIDC_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
   OIDC_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
   OIDC_CLIENT_SECRET: ${{ secrets.OIDC_CLIENT_SECRET }}
 jobs:
@@ -49,7 +47,7 @@ jobs:
           terraform init \
             -backend-config="bucket=${{ env.TF_BACKEND_BUCKET }}" \
             -backend-config="key=${{ env.TF_BACKEND_KEY }}" \
-            -backend-config="region=${{ env.TF_BACKEND_REGION }}" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ env.TF_BACKEND_DYNAMODB_TABLE }}" \
             -backend-config="encrypt=true"
         working-directory: ${{ env.WEB_APP_DIR }}
@@ -59,6 +57,7 @@ jobs:
             terraform apply -auto-approve -input=false   -var="client_id=${{ env.OIDC_CLIENT_ID }}" \
             -var="client_secret=${{ env.OIDC_CLIENT_SECRET }}"
           else
-            terraform destroy -auto-approve
+            terraform destroy -auto-approve -var="client_id=${{ env.OIDC_CLIENT_ID }}" \
+            -var="client_secret=${{ env.OIDC_CLIENT_SECRET }}"
           fi
         working-directory: ${{ env.WEB_APP_DIR }}

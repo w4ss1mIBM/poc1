@@ -7,18 +7,6 @@ variable "region" {
   default     = "eu-west-1"
 }
 
-# variable "bucket_name" {
-#   description = "S3 bucket for storing Terraform state files."
-#   type        = string
-#   default     = "wsa-backend-terraform-tfstate-${var.environment}"
-# }
-
-# variable "db_table_name" {
-#   description = "DynamoDB table for Terraform state lock."
-#   type        = string
-#   default     = "wsa-terraform-state-locking-${var.environment}"
-# }
-
 variable "environment" {
   type        = string
   description = "The deployment environment (e.g., prod, dev, staging)."
@@ -54,7 +42,7 @@ variable "alb_subnet" {
 variable "windows_server_ami_name_pattern" {
   description = "Name pattern to identify the Windows AMI."
   type        = string
-  default     = "FRESH-TEMPLATE-WEBAPP-*"
+  default     = "FRESH-AMI-*"
 }
 
 variable "ami_owner" {
@@ -79,7 +67,7 @@ variable "key_name" {
 variable "instance_name_prefix" {
   description = "Prefix for instance names to help with identifying resources."
   type        = string
-  default     = "wsa-ec2-app"
+  default     = "EC2-WEBAPP"
 }
 
 variable "cpu_credits" {
@@ -112,19 +100,62 @@ variable "ebs_device_name" {
 variable "sg_name" {
   description = "The name of the security group."
   type        = string
-  default     = "wsa-app-sg"
+  default     = "app-sg"
+}
+variable "sg_ingress_ports" {
+  description = "List of ingress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["10.0.0.0/16"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["192.168.1.0/24"]
+    }
+  ]
+
 }
 
-variable "sg_ports_ingress" {
-  description = "List of ingress ports for the security group."
-  type        = list(number)
-  default     = [443, 3389]
+variable "sg_egress_ports" {
+  description = "List of egress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["10.0.0.0/16"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["192.168.1.0/24"]
+    }
+  ]
+
 }
 
 variable "sg_ports_egress" {
   description = "List of egress ports for the security group."
   type        = list(number)
-  default     = [443, 3389]
+  default     = [80, 443]
 }
 
 variable "sg_protocol" {
@@ -132,17 +163,7 @@ variable "sg_protocol" {
   type        = string
   default     = "tcp"
 }
-variable "ec2_ingress_cidr_blocks" {
-  type        = list(string)
-  description = "CIDR blocks for EC2 security group ingress."
-  default     = ["127.1.0.1/32", "0.0.0.0/0"]
-}
 
-variable "ec2_egress_cidr_blocks" {
-  type        = list(string)
-  description = "CIDR blocks for EC2 security group egress."
-  default     = ["127.1.0.1/32", "0.0.0.0/0"]
-}
 
 # --------------------------
 # ALB Configuration
@@ -151,7 +172,7 @@ variable "ec2_egress_cidr_blocks" {
 variable "ssl_policy" {
   description = "The SSL policy to use for HTTPS listeners"
   type        = string
-  default     = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  default     = "ELBSecurityPolicy-2016-08"
 }
 variable "client_id" {
   description = "OIDC client ID"
@@ -165,31 +186,31 @@ variable "client_secret" {
 variable "oidc_settings" {
   description = "OIDC authentication settings"
   type = object({
-    authorization_endpoint      = string
-    issuer                      = string
-    token_endpoint              = string
-    user_info_endpoint          = string
-    scope                       = string
+    authorization_endpoint     = string
+    issuer                     = string
+    token_endpoint             = string
+    user_info_endpoint         = string
+    scope                      = string
     on_unauthenticated_request = string
   })
   default = {
-    authorization_endpoint      = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/authorize"
-    issuer                      = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x"
-    token_endpoint              = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/access_token"
-    user_info_endpoint          = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/userinfo"
-    scope                       = "openid profile bmwids b2xroles"
+    authorization_endpoint     = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/authorize"
+    issuer                     = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x"
+    token_endpoint             = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/access_token"
+    user_info_endpoint         = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/userinfo"
+    scope                      = "openid profile bmwids b2xroles"
     on_unauthenticated_request = "authenticate"
   }
-} 
+}
 variable "certificate_arn" {
   description = "The ARN of the ACM certificate"
   type        = string
-  default = "arn:aws:acm:eu-west-1:508072157138:certificate/b5ed352a-865f-49cd-bdf4-ed5abccc1b48"
+  default     = "arn:aws:acm:eu-west-1:508072157138:certificate/b5ed352a-865f-49cd-bdf4-ed5abccc1b48"
 }
 
 variable "alb_ingress_cidr_blocks" {
   type        = list(string)
   description = "CIDR blocks for ALB security group ingress."
-  default     = ["127.1.0.1/32", "0.0.0.0/0"]
+  default     = ["127.0.0.1/32", "0.0.0.0/0"]
 
 }

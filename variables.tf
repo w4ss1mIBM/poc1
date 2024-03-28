@@ -54,7 +54,7 @@ variable "alb_subnet" {
 variable "windows_server_ami_name_pattern" {
   description = "Name pattern to identify the Windows AMI."
   type        = string
-  default     = "FRESH-TEMPLATE-WEBAPP-*"
+  default     = "FRESH-AMI-*"
 }
 
 variable "ami_owner" {
@@ -79,7 +79,7 @@ variable "key_name" {
 variable "instance_name_prefix" {
   description = "Prefix for instance names to help with identifying resources."
   type        = string
-  default     = "wsl-ec2-app"
+  default     = "EC2-WEBAPP"
 }
 
 variable "cpu_credits" {
@@ -112,19 +112,62 @@ variable "ebs_device_name" {
 variable "sg_name" {
   description = "The name of the security group."
   type        = string
-  default     = "wsl-app-sg"
+  default     = "app-sg"
+}
+variable "sg_ingress_ports" {
+  description = "List of ingress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["10.0.0.0/16"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["192.168.1.0/24"]
+    }
+  ]
+
 }
 
-variable "sg_ports_ingress" {
-  description = "List of ingress ports for the security group."
-  type        = list(number)
-  default     = [443, 3389]
+variable "sg_egress_ports" {
+  description = "List of egress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["10.0.0.0/16"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["192.168.1.0/24"]
+    }
+  ]
+
 }
 
 variable "sg_ports_egress" {
   description = "List of egress ports for the security group."
   type        = list(number)
-  default     = [443, 3389]
+  default     = [80, 443]
 }
 
 variable "sg_protocol" {
@@ -132,17 +175,7 @@ variable "sg_protocol" {
   type        = string
   default     = "tcp"
 }
-variable "ec2_ingress_cidr_blocks" {
-  type        = list(string)
-  description = "CIDR blocks for EC2 security group ingress."
-  default     = ["127.0.0.1/32", "0.0.0.0/0"]
-}
 
-variable "ec2_egress_cidr_blocks" {
-  type        = list(string)
-  description = "CIDR blocks for EC2 security group egress."
-  default     = ["127.0.0.1/32", "0.0.0.0/0"]
-}
 
 # --------------------------
 # ALB Configuration
