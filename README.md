@@ -1,4 +1,4 @@
-# Terraform Module Prerequisites
+# Terraform Module POC1 Prerequisites
 
 Before using this Terraform module, ensure you have completed the following prerequisites:
 
@@ -8,7 +8,29 @@ Before using this Terraform module, ensure you have completed the following prer
 ### 1.1. User for Terraform
 
 - Create an IAM user with programmatic access.
-- Attach policies to the user for managing AWS resources through Terraform.
+- Attach policies to the user for managing AWS resources through Terraform:
+- `AmazonDynamoDBFullAccess`: Grants full access to DynamoDB.
+- `AmazonEC2FullAccess`: Grants full access to EC2.
+- `AmazonEventBridgeFullAccess`: Grants full access to EventBridge.
+- `AmazonS3FullAccess`: Grants full access to S3.
+- `AmazonSNSFullAccess`: Grants full access to SNS.
+- `AmazonVPCFullAccess`: Grants full access to VPC.
+- `CloudWatchAgentServerPolicy`: Allows EC2 instances to interact with CloudWatch for monitoring and management.
+- `IAMFullAccess`: Grants full access to IAM.
+- `KmsPolicyForAMI`: Specifically tailored for managing keys used in AMI encryption/decryption.
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "kms:*",
+            "Resource": "*"
+        }
+    ]
+}
+```
 
 ## 2. Create VPC with Two Subnets
 
@@ -20,11 +42,11 @@ Before using this Terraform module, ensure you have completed the following prer
 
 - Create two subnets within the VPC in different availability zones.
 
-## 3. Configure Backend for Terraform State
+## 3. Create Hosted Zone And Import Certificate
 
-### 3.1. Setup S3 Bucket and DynamoDB Variables
+### 3.1. Create Hosted Zone And Import Certificate
 
-- In Folder called backend in variables.tf change the name of Dynamo TABLE and Bucket S3 that we want to create for the backend of Terraform
+- Create Hosted Zone And Import Certificate To provide HostedZone ID & Certificate ARN 
 
 ## 4. Store Secrets in GitHub Secrets
 
@@ -58,7 +80,87 @@ Store the following secrets in GitHub Secrets for secure access:
 
 ## 7. Execute Terraform Workflows
 
-### 7.1. Provision Backend Terraform
+### 7.1. (One Time Provision) Terraform State
+
+- This workflow provisions the S3 bucket and DynamoDB table for Terraform state management.
+- Ensure all configurations are defined in your Terraform files before execution.
+- Execute the Terraform plan to review changes, then apply with the Terraform apply command.
+- Verify the creation of resources through the AWS Management Console or Terraform apply logs.
+
+### 7.2. Provision P/D Destroy AWS Resources
+
+- This workflow provisions Production (P) and Development (D) AWS resources as defined in your Terraform files.
+- Includes creation of EC2 instances, VPC configurations, subnets, and other required AWS resources.
+- Start with the Terraform plan command to review planned resources creation, then apply with the Terraform apply command.
+- Monitor the logs for any errors or warnings and verify all resources are provisioned as expected.
+
+**Important:** Always review Terraform plans before applying to avoid unintended changes to your infrastructure. Enable logging for both workflows to capture execution process details, crucial for troubleshooting any provisioning issues.
+
+# Terraform AWS Infrastructure Deployment POC1 Module
+
+This project uses Terraform to provision and manage AWS resources for POC1 applications Type. It encompasses configurations for network resources, compute instances, storage, monitoring, and security, ensuring a highly available and secure application deployment.
+
+# Terraform Module Prerequisites
+
+Before using this Terraform module, ensure you have completed the following prerequisites:
+
+## 1. Create User For Terraform
+
+
+### 1.1. User for Terraform
+
+- Create an IAM user with programmatic access.
+- Attach policies to the user for managing AWS resources through Terraform.
+
+## 2. Create VPC with Two Subnets
+
+### 2.1. VPC
+
+- Define the VPC configuration including CIDR block, route table, and internet gateway.
+
+### 2.2. Subnets
+
+- Create two subnets within the VPC in different availability zones.
+
+## 3. Create Hosted Zone And Import Certificate
+
+### 3.1. Create Hosted Zone And Import Certificate
+
+- Create Hosted Zone And Import Certificate
+
+## 4. Store Secrets in GitHub Secrets
+
+### 4.1. GitHub Secrets
+
+Store the following secrets in GitHub Secrets for secure access:
+- `AWS_ACCESS_KEY_ID`: Your AWS access key ID.
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret access key.
+- `AWS_REGION`: The AWS region where resources will be deployed.
+- `TF_BACKEND_BUCKET`: Name of the S3 bucket for storing Terraform state.
+- `TF_BACKEND_KEY`: Key name for the Terraform state file in the S3 bucket.
+- `TF_BACKEND_DYNAMODB_TABLE`: Name of the DynamoDB table for Terraform state locking.
+- `OIDC_CLIENT_ID`: Your OIDC client ID for accessing AWS services.
+- `OIDC_CLIENT_SECRET`: Your OIDC client secret for accessing AWS services.
+
+## 5. Modify Terraform Variables
+
+### 5.1. VPC Variables
+
+- Update VPC-related variables such as CIDR block, subnet configurations, etc., as per your requirements.
+
+### 5.2. Security Group and ALB Variables
+
+- Adjust security group and Application Load Balancer (ALB) configurations based on your needs.
+
+## 6. Check All Variables
+
+### 6.1. Variable Validation
+
+- Verify all variables in the Terraform configuration to ensure they match your environment and requirements.
+
+## 7. Execute Terraform Workflows
+
+### 7.1. (One Time Provision) Terraform State
 
 - This workflow provisions the S3 bucket and DynamoDB table for Terraform state management.
 - Ensure all configurations are defined in your Terraform files before execution.
@@ -165,63 +267,104 @@ Please note that this project adheres to a code of conduct. By participating, yo
 | Name | Version |
 |------|---------|
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | 4.51.0 |
-
+## Usage
 Basic usage of this module is as follows:
 ```hcl
-module "deploy_app_poc1" {
-  source = "./modules/poc1-app/"
-
-  region                          = var.region
-  windows_server_ami_name_pattern = var.windows_server_ami_name_pattern
-  ami_owner                       = var.ami_owner
-  instance_type                   = var.instance_type
-  key_name                        = var.key_name
-  instance_name_prefix            = var.instance_name_prefix
-  cpu_credits                     = var.cpu_credits
-  root_volume_size                = var.root_volume_size
-  ebs_size                        = var.ebs_size
-  ebs_device_name                 = var.ebs_device_name
-  sg_name                         = var.sg_name
-  sg_ports_egress                 = var.sg_ports_egress
-  sg_protocol                     = var.sg_protocol
-  selected_vpc_name               = var.selected_vpc_name
-  app_subnet                      = var.app_subnet
-  alb_subnet                      = var.alb_subnet
-  alb_ingress_cidr_blocks         = var.alb_ingress_cidr_blocks
-  client_id                       = var.client_id
-  client_secret                   = var.client_secret
-  sg_egress_ports                 = var.sg_egress_ports
-  sg_ingress_ports                = var.sg_ingress_ports
-
+module "example" {
+  	 source  = "<module-path>"
+  
+	 # Required variables
+  	 client_id  = 
+  	 client_secret  = 
+  
+	 # Optional variables
+  	 alb_ingress_cidr_blocks  = [
+  {
+    "cidr_blocks": [
+      "0.0.0.0/0"
+    ],
+    "from_port": 80,
+    "protocol": "tcp",
+    "to_port": 80
+  },
+  {
+    "cidr_blocks": [
+      "0.0.0.0/0"
+    ],
+    "from_port": 443,
+    "protocol": "tcp",
+    "to_port": 443
+  }
+]
+  	 alb_subnet  = "private-subnet-1"
+  	 ami_owner  = "694493444487"
+  	 app_subnet  = "private-subnet-0"
+  	 certificate_arn  = "arn:aws:acm:eu-west-1:508072157138:certificate/b5ed352a-865f-49cd-bdf4-ed5abccc1b48"
+  	 cpu_credits  = "unlimited"
+  	 ebs_device_name  = "/dev/sdh"
+  	 ebs_size  = 40
+  	 environment  = "int"
+  	 hosted_zone_id  = "Z05358721UPIUVROSJBSM"
+  	 instance_name_prefix  = "EC2-WEBAPP"
+  	 instance_type  = "t2.micro"
+  	 key_name  = "key-pair"
+  	 oidc_settings  = {
+  "authorization_endpoint": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/authorize",
+  "issuer": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x",
+  "on_unauthenticated_request": "authenticate",
+  "scope": "openid profile bmwids b2xroles",
+  "token_endpoint": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/access_token",
+  "user_info_endpoint": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/userinfo"
 }
-
+  	 region  = "eu-west-1"
+  	 selected_vpc_name  = "private-vpc"
+  	 sg_egress_ports  = [
+  {
+    "cidr_blocks": [
+      "0.0.0.0/0"
+    ],
+    "from_port": 0,
+    "protocol": "-1",
+    "to_port": 0
+  }
+]
+  	 sg_ingress_ports  = [
+  {
+    "cidr_blocks": [
+      "10.0.0.0/16"
+    ],
+    "from_port": 80,
+    "protocol": "tcp",
+    "to_port": 80
+  },
+  {
+    "cidr_blocks": [
+      "192.168.1.0/24"
+    ],
+    "from_port": 443,
+    "protocol": "tcp",
+    "to_port": 443
+  }
+]
+  	 sg_name  = "app-sg"
+  	 sg_ports_egress  = [
+  80,
+  443
+]
+  	 sg_protocol  = "tcp"
+  	 ssl_policy  = "ELBSecurityPolicy-2016-08"
+  	 subdomain_url  = "app.meetingroom-int.eu-west-1.aws.cloud.bmw"
+  	 windows_server_ami_name_pattern  = "FRESH-AMI-*"
+}
 ```
   ## Resources
 
-| Name | Type |
-|------|------|
-| [aws_ebs_volume.ebs_volume_for_windows_ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume) | resource |
-| [aws_iam_instance_profile.ec2_profile](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
-| [aws_iam_role.ec2_cloudwatch_ssm_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy_attachment.cloudwatch_agent_server_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_role_policy_attachment.ssm_managed_instance_core](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_instance.windows_ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
-| [aws_lb.alb_private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
-| [aws_lb_listener.alb_listener](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
-| [aws_lb_target_group.alb_ec2_instance_tg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
-| [aws_lb_target_group_attachment.ec2_tg_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group_attachment) | resource |
-| [aws_security_group.alb_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_security_group.allow_tls](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_volume_attachment.ebs_att](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/volume_attachment) | resource |
-| [aws_ami.windows](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
-| [aws_subnet.alb_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/subnet) | data source |
-| [aws_subnet.app_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/subnet) | data source |
-| [aws_vpc.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
+No resources.
   ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_alb_ingress_cidr_blocks"></a> [alb\_ingress\_cidr\_blocks](#input\_alb\_ingress\_cidr\_blocks) | CIDR blocks for ALB security group ingress. | `list(string)` | <pre>[<br>  "127.0.0.1/32",<br>  "0.0.0.0/0"<br>]</pre> | no |
+| <a name="input_alb_ingress_cidr_blocks"></a> [alb\_ingress\_cidr\_blocks](#input\_alb\_ingress\_cidr\_blocks) | List of ingress ports and CIDR blocks | <pre>list(object({<br>    from_port   = number<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | <pre>[<br>  {<br>    "cidr_blocks": [<br>      "0.0.0.0/0"<br>    ],<br>    "from_port": 80,<br>    "protocol": "tcp",<br>    "to_port": 80<br>  },<br>  {<br>    "cidr_blocks": [<br>      "0.0.0.0/0"<br>    ],<br>    "from_port": 443,<br>    "protocol": "tcp",<br>    "to_port": 443<br>  }<br>]</pre> | no |
 | <a name="input_alb_subnet"></a> [alb\_subnet](#input\_alb\_subnet) | Subnet for the Application Load Balancer. | `string` | `"private-subnet-1"` | no |
 | <a name="input_ami_owner"></a> [ami\_owner](#input\_ami\_owner) | Owner ID of the AMI | `string` | `"694493444487"` | no |
 | <a name="input_app_subnet"></a> [app\_subnet](#input\_app\_subnet) | Subnet for application servers. | `string` | `"private-subnet-0"` | no |
@@ -232,35 +375,28 @@ module "deploy_app_poc1" {
 | <a name="input_ebs_device_name"></a> [ebs\_device\_name](#input\_ebs\_device\_name) | The device name to attach the EBS volume to. | `string` | `"/dev/sdh"` | no |
 | <a name="input_ebs_size"></a> [ebs\_size](#input\_ebs\_size) | The size of the EBS volume in GiB. | `number` | `40` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The deployment environment (e.g., prod, dev, staging). | `string` | `"int"` | no |
+| <a name="input_hosted_zone_id"></a> [hosted\_zone\_id](#input\_hosted\_zone\_id) | The id of Hosted Zone | `string` | `"Z05358721UPIUVROSJBSM"` | no |
 | <a name="input_instance_name_prefix"></a> [instance\_name\_prefix](#input\_instance\_name\_prefix) | Prefix for instance names to help with identifying resources. | `string` | `"EC2-WEBAPP"` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | EC2 instance type. | `string` | `"t2.micro"` | no |
-| <a name="input_key_name"></a> [key\_name](#input\_key\_name) | Name of the AWS key pair for EC2 instances. | `string` | `"key-playground"` | no |
+| <a name="input_key_name"></a> [key\_name](#input\_key\_name) | Name of the AWS key pair for EC2 instances. | `string` | `"key-pair"` | no |
 | <a name="input_oidc_settings"></a> [oidc\_settings](#input\_oidc\_settings) | OIDC authentication settings | <pre>object({<br>    authorization_endpoint     = string<br>    issuer                     = string<br>    token_endpoint             = string<br>    user_info_endpoint         = string<br>    scope                      = string<br>    on_unauthenticated_request = string<br>  })</pre> | <pre>{<br>  "authorization_endpoint": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/authorize",<br>  "issuer": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x",<br>  "on_unauthenticated_request": "authenticate",<br>  "scope": "openid profile bmwids b2xroles",<br>  "token_endpoint": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/access_token",<br>  "user_info_endpoint": "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/userinfo"<br>}</pre> | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"eu-west-1"` | no |
-| <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | Root volume size in GiB. | `number` | `40` | no |
 | <a name="input_selected_vpc_name"></a> [selected\_vpc\_name](#input\_selected\_vpc\_name) | Name of the VPC for deployment. | `string` | `"private-vpc"` | no |
-| <a name="input_sg_egress_ports"></a> [sg\_egress\_ports](#input\_sg\_egress\_ports) | List of egress ports and CIDR blocks | <pre>list(object({<br>    from_port   = number<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | <pre>[<br>  {<br>    "cidr_blocks": [<br>      "10.0.0.0/16"<br>    ],<br>    "from_port": 80,<br>    "protocol": "-1",<br>    "to_port": 65535<br>  },<br>  {<br>    "cidr_blocks": [<br>      "192.168.1.0/24"<br>    ],<br>    "from_port": 5432,<br>    "protocol": "tcp",<br>    "to_port": 5432<br>  }<br>]</pre> | no |
-| <a name="input_sg_ingress_ports"></a> [sg\_ingress\_ports](#input\_sg\_ingress\_ports) | List of ingress ports and CIDR blocks | <pre>list(object({<br>    from_port   = number<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | <pre>[<br>  {<br>    "cidr_blocks": [<br>      "10.0.0.0/16"<br>    ],<br>    "from_port": 80,<br>    "protocol": "-1",<br>    "to_port": 80<br>  },<br>  {<br>    "cidr_blocks": [<br>      "192.168.1.0/24"<br>    ],<br>    "from_port": 443,<br>    "protocol": "tcp",<br>    "to_port": 443<br>  }<br>]</pre> | no |
+| <a name="input_sg_egress_ports"></a> [sg\_egress\_ports](#input\_sg\_egress\_ports) | List of egress ports and CIDR blocks | <pre>list(object({<br>    from_port   = number<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | <pre>[<br>  {<br>    "cidr_blocks": [<br>      "0.0.0.0/0"<br>    ],<br>    "from_port": 0,<br>    "protocol": "-1",<br>    "to_port": 0<br>  }<br>]</pre> | no |
+| <a name="input_sg_ingress_ports"></a> [sg\_ingress\_ports](#input\_sg\_ingress\_ports) | List of ingress ports and CIDR blocks | <pre>list(object({<br>    from_port   = number<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | <pre>[<br>  {<br>    "cidr_blocks": [<br>      "10.0.0.0/16"<br>    ],<br>    "from_port": 80,<br>    "protocol": "tcp",<br>    "to_port": 80<br>  },<br>  {<br>    "cidr_blocks": [<br>      "192.168.1.0/24"<br>    ],<br>    "from_port": 443,<br>    "protocol": "tcp",<br>    "to_port": 443<br>  }<br>]</pre> | no |
 | <a name="input_sg_name"></a> [sg\_name](#input\_sg\_name) | The name of the security group. | `string` | `"app-sg"` | no |
 | <a name="input_sg_ports_egress"></a> [sg\_ports\_egress](#input\_sg\_ports\_egress) | List of egress ports for the security group. | `list(number)` | <pre>[<br>  80,<br>  443<br>]</pre> | no |
 | <a name="input_sg_protocol"></a> [sg\_protocol](#input\_sg\_protocol) | Protocol for the security group rules. | `string` | `"tcp"` | no |
 | <a name="input_ssl_policy"></a> [ssl\_policy](#input\_ssl\_policy) | The SSL policy to use for HTTPS listeners | `string` | `"ELBSecurityPolicy-2016-08"` | no |
+| <a name="input_subdomain_url"></a> [subdomain\_url](#input\_subdomain\_url) | The Subdomain url of application redirected to alb | `string` | `"app.meetingroom-int.eu-west-1.aws.cloud.bmw"` | no |
 | <a name="input_windows_server_ami_name_pattern"></a> [windows\_server\_ami\_name\_pattern](#input\_windows\_server\_ami\_name\_pattern) | Name pattern to identify the Windows AMI. | `string` | `"FRESH-AMI-*"` | no |
   ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_alb_arn"></a> [alb\_arn](#output\_alb\_arn) | The ARN of the Application Load Balancer. |
 | <a name="output_alb_dns_name"></a> [alb\_dns\_name](#output\_alb\_dns\_name) | The DNS name of the Application Load Balancer. |
-| <a name="output_alb_sg_id"></a> [alb\_sg\_id](#output\_alb\_sg\_id) | The ID of the ALB security group in the private subnet. |
-| <a name="output_app_subnet_id"></a> [app\_subnet\_id](#output\_app\_subnet\_id) | The ID of the application subnet. |
-| <a name="output_db_subnet_id"></a> [db\_subnet\_id](#output\_db\_subnet\_id) | The ID of the alb subnet. |
-| <a name="output_selected_vpc_id"></a> [selected\_vpc\_id](#output\_selected\_vpc\_id) | The ID of the selected VPC. |
-| <a name="output_tg_arn"></a> [tg\_arn](#output\_tg\_arn) | The ARN of the Target Group associated with the ALB. |
-| <a name="output_tls_sg_id"></a> [tls\_sg\_id](#output\_tls\_sg\_id) | The ID of the security group allowing TLS traffic. |
-| <a name="output_windows_ec2_instance_ids"></a> [windows\_ec2\_instance\_ids](#output\_windows\_ec2\_instance\_ids) | The IDs of the Windows EC2 instances. |
-| <a name="output_windows_ec2_instance_private_ips"></a> [windows\_ec2\_instance\_private\_ips](#output\_windows\_ec2\_instance\_private\_ips) | The private IP addresses of the Windows EC2 instances. |
-| <a name="output_windows_ec2_instance_public_ips"></a> [windows\_ec2\_instance\_public\_ips](#output\_windows\_ec2\_instance\_public\_ips) | The public IP addresses of the Windows EC2 instances. |
+| <a name="output_subdomain_url"></a> [subdomain\_url](#output\_subdomain\_url) | n/a |
+| <a name="output_windows_ec2_instance_private_ip"></a> [windows\_ec2\_instance\_private\_ip](#output\_windows\_ec2\_instance\_private\_ip) | The private IP addresses of the Windows EC2 instances. |
 <!-- END_AUTOMATED_TF_DOCS_BLOCK -->
 ## Footer
 Contributor Names

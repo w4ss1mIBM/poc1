@@ -10,5 +10,5 @@ output "alb_dns_name" {
   value       = module.deploy_app_poc1.alb_dns_name
 }
 output "subdomain_url" {
-  value       = module.deploy_app_poc1.subdomain_url
+  value = module.deploy_app_poc1.subdomain_url
 }

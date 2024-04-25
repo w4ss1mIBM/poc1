@@ -29,7 +29,7 @@ resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
 
 #EC2 instance profile
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "ec2_cloudwatch_ssm_profile"
+  name = "ec2_cloudwatch_ssm_instance_profile"
   role = aws_iam_role.ec2_cloudwatch_ssm_role.name
 }
 

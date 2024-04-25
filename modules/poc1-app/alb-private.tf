@@ -65,8 +65,8 @@ resource "aws_lb_listener" "alb_listener" {
 }
 
 resource "aws_route53_record" "app_record" {
-  zone_id = "Z05358721UPIUVROSJBSM"
-  name    = "app.webserviceadministration-int.eu-west-1.aws.cloud.bmw"
+  zone_id = var.hosted_zone_id
+  name    = var.subdomain_url
   type    = "A"
 
   alias {

@@ -13,10 +13,10 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "wsa-backend-terraform-tfstate-int"
-    key            = "state/int/ec2-tfstate/terraform.tfstate"
+    bucket         = "meetingroom-int-backend-terraform-tfstate-poc3"
+    key            = "state/int/ec2-tfstate/terraformv2.tfstate"
     region         = "eu-west-1"
-    dynamodb_table = "wsa-terraform-state-locking-int"
+    dynamodb_table = "meetingroom-int-terraform-state-locking-poc3"
     encrypt        = true
   }
 }
@@ -31,7 +31,6 @@ module "deploy_app_poc1" {
   key_name                        = var.key_name
   instance_name_prefix            = var.instance_name_prefix
   cpu_credits                     = var.cpu_credits
-  root_volume_size                = var.root_volume_size
   ebs_size                        = var.ebs_size
   ebs_device_name                 = var.ebs_device_name
   sg_name                         = var.sg_name
@@ -44,4 +43,7 @@ module "deploy_app_poc1" {
   sg_egress_ports                 = var.sg_egress_ports
   sg_ingress_ports                = var.sg_ingress_ports
   certificate_arn                 = var.certificate_arn
+  hosted_zone_id                  = var.hosted_zone_id
+  subdomain_url                   = var.subdomain_url
+
 }

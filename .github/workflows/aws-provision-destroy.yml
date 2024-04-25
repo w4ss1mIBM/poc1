@@ -26,11 +26,15 @@ env:
   TF_BACKEND_DYNAMODB_TABLE: ${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}
   OIDC_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
   OIDC_CLIENT_SECRET: ${{ secrets.OIDC_CLIENT_SECRET }}
+
+run-name: ${{ inputs.action_type }} to ${{ github.ref_name }}  by @${{ github.actor }}
+
 jobs:
   # Job for creating/Destroying AWS ressources
   manage_resources:
     if: ${{ github.event.inputs.action_type == 'provision' || github.event.inputs.action_type == 'destroy' }}
     name: Provision or Destroy AWS Resources
+    environment: ${{ github.ref_name }} 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code

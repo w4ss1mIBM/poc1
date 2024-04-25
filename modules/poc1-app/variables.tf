@@ -1,6 +1,7 @@
 # --------------------------
 # AWS Backend Configuration
 # --------------------------
+
 variable "region" {
   description = "AWS region"
   type        = string
@@ -13,11 +14,11 @@ variable "environment" {
   default     = "int"
 }
 
-
-
 # --------------------------
 # Networking Configuration
 # --------------------------
+
+
 variable "selected_vpc_name" {
   description = "Name of the VPC for deployment."
   type        = string
@@ -50,7 +51,6 @@ variable "ami_owner" {
   type        = string
   default     = "694493444487"
 }
-
 
 variable "instance_type" {
   description = "EC2 instance type."
@@ -97,11 +97,13 @@ variable "ebs_device_name" {
 # --------------------------
 # Security Group Configuration
 # --------------------------
+
 variable "sg_name" {
   description = "The name of the security group."
   type        = string
   default     = "app-sg"
 }
+
 variable "sg_ingress_ports" {
   description = "List of ingress ports and CIDR blocks"
   type = list(object({
@@ -164,7 +166,6 @@ variable "sg_protocol" {
   default     = "tcp"
 }
 
-
 # --------------------------
 # ALB Configuration
 # --------------------------
@@ -174,6 +175,7 @@ variable "ssl_policy" {
   type        = string
   default     = "ELBSecurityPolicy-2016-08"
 }
+
 variable "client_id" {
   description = "OIDC client ID"
   type        = string
@@ -183,6 +185,7 @@ variable "client_secret" {
   description = "OIDC client secret"
   type        = string
 }
+
 variable "oidc_settings" {
   description = "OIDC authentication settings"
   type = object({
@@ -202,15 +205,44 @@ variable "oidc_settings" {
     on_unauthenticated_request = "authenticate"
   }
 }
+
 variable "certificate_arn" {
   description = "The ARN of the ACM certificate"
   type        = string
   default     = "arn:aws:acm:eu-west-1:508072157138:certificate/b5ed352a-865f-49cd-bdf4-ed5abccc1b48"
 }
 
-variable "alb_ingress_cidr_blocks" {
-  type        = list(string)
-  description = "CIDR blocks for ALB security group ingress."
-  default     = ["127.0.0.1/32", "0.0.0.0/0"]
+variable "hosted_zone_id" {
+  description = "The id of Hosted Zone"
+  type        = string
+  default     = "Z026893033NQ8DKXNWP5G"
+}
 
+variable "subdomain_url" {
+   description = "The Subdomain url of application redirected to alb"
+   default = "app.meetingroom-int.eu-west-1.aws.cloud.bmw"
+   type        = string
+}
+variable "alb_ingress_cidr_blocks" {
+  description = "List of ingress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
 }

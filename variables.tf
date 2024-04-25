@@ -7,24 +7,12 @@ variable "region" {
   default     = "eu-west-1"
 }
 
-# variable "bucket_name" {
-#   description = "S3 bucket for storing Terraform state files."
-#   type        = string
-#   default     = "wsl-backend-terraform-tfstate-${var.environment}"
-# }
-
-# variable "db_table_name" {
-#   description = "DynamoDB table for Terraform state lock."
-#   type        = string
-#   default     = "wsl-terraform-state-locking-${var.environment}"
-# }
 
 variable "environment" {
   type        = string
   description = "The deployment environment (e.g., prod, dev, staging)."
   default     = "int"
 }
-
 
 
 # --------------------------
@@ -73,7 +61,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "Name of the AWS key pair for EC2 instances."
   type        = string
-  default     = "key-playground"
+  default     = "key-pair"
 }
 
 variable "instance_name_prefix" {
@@ -86,12 +74,6 @@ variable "cpu_credits" {
   description = "CPU credit option for burstable performance instances."
   type        = string
   default     = "unlimited"
-}
-
-variable "root_volume_size" {
-  description = "Root volume size in GiB."
-  type        = number
-  default     = 40
 }
 
 variable "ebs_size" {
@@ -149,16 +131,10 @@ variable "sg_egress_ports" {
   }))
   default = [
     {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
-      cidr_blocks = ["10.0.0.0/16"]
-    },
-    {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
-      cidr_blocks = ["192.168.1.0/24"]
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
     }
   ]
 
@@ -220,9 +196,37 @@ variable "certificate_arn" {
   default     = "arn:aws:acm:eu-west-1:508072157138:certificate/b5ed352a-865f-49cd-bdf4-ed5abccc1b48"
 }
 
-variable "alb_ingress_cidr_blocks" {
-  type        = list(string)
-  description = "CIDR blocks for ALB security group ingress."
-  default     = ["127.0.0.1/32", "0.0.0.0/0"]
+variable "hosted_zone_id" {
+  description = "The id of Hosted Zone"
+  type        = string
+  default     = "Z05358721UPIUVROSJBSM"
+}
 
+variable "subdomain_url" {
+  description = "The Subdomain url of application redirected to alb"
+  default     = "app.meetingroom-int.eu-west-1.aws.cloud.bmw"
+  type        = string
+}
+variable "alb_ingress_cidr_blocks" {
+  description = "List of ingress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
 }
