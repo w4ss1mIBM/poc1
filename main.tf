@@ -38,6 +38,7 @@ module "deploy_app_poc1" {
   app_subnet                      = var.app_subnet
   alb_subnet                      = var.alb_subnet
   alb_ingress_cidr_blocks         = var.alb_ingress_cidr_blocks
+  alb_egress_cidr_blocks          = var.alb_egress_cidr_blocks
   client_id                       = var.client_id
   client_secret                   = var.client_secret
   sg_egress_ports                 = var.sg_egress_ports
@@ -45,5 +46,9 @@ module "deploy_app_poc1" {
   certificate_arn                 = var.certificate_arn
   hosted_zone_id                  = var.hosted_zone_id
   subdomain_url                   = var.subdomain_url
+  oidc_settings                   = var.oidc_settings
+  ssl_policy                      = var.ssl_policy
+  environment                     = var.environment
+  root_volume_size                = var.root_volume_size
 
 }

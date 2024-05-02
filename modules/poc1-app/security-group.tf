@@ -43,6 +43,15 @@ resource "aws_security_group" "alb_security_group" {
       cidr_blocks = ingress.value.cidr_blocks
     }
   }
+  dynamic "egress" {
+    for_each = var.alb_egress_cidr_blocks
+    content {
+      from_port   = egress.value.from_port
+      to_port     = egress.value.to_port
+      protocol    = egress.value.protocol
+      cidr_blocks = egress.value.cidr_blocks
+    }
+  }
   tags = {
     Name = "alb-sg-private-subnet-${var.environment}" # Tagging with environment for clear resource segregation.
   }

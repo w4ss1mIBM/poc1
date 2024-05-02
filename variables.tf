@@ -81,6 +81,11 @@ variable "ebs_size" {
   type        = number
   default     = 40
 }
+variable "root_volume_size" {
+  description = "Root volume size in GiB."
+  type        = number
+  default     = 40
+}
 
 variable "ebs_device_name" {
   description = "The device name to attach the EBS volume to."
@@ -140,19 +145,53 @@ variable "sg_egress_ports" {
 
 }
 
-variable "sg_ports_egress" {
-  description = "List of egress ports for the security group."
-  type        = list(number)
-  default     = [80, 443]
+
+variable "alb_ingress_cidr_blocks" {
+  description = "List of ingress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
 }
-
-variable "sg_protocol" {
-  description = "Protocol for the security group rules."
-  type        = string
-  default     = "tcp"
+variable "alb_egress_cidr_blocks" {
+  description = "List of ingress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
 }
-
-
 # --------------------------
 # ALB Configuration
 # --------------------------
@@ -206,27 +245,4 @@ variable "subdomain_url" {
   description = "The Subdomain url of application redirected to alb"
   default     = "app.meetingroom-int.eu-west-1.aws.cloud.bmw"
   type        = string
-}
-variable "alb_ingress_cidr_blocks" {
-  description = "List of ingress ports and CIDR blocks"
-  type = list(object({
-    from_port   = number
-    to_port     = number
-    protocol    = string
-    cidr_blocks = list(string)
-  }))
-  default = [
-    {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    },
-    {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
-  ]
 }

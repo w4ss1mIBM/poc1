@@ -11,7 +11,6 @@ variable "region" {
 variable "environment" {
   type        = string
   description = "The deployment environment (e.g., prod, dev, staging)."
-  default     = "int"
 }
 
 # --------------------------
@@ -22,19 +21,16 @@ variable "environment" {
 variable "selected_vpc_name" {
   description = "Name of the VPC for deployment."
   type        = string
-  default     = "private-vpc"
 }
 
 variable "app_subnet" {
   description = "Subnet for application servers."
   type        = string
-  default     = "private-subnet-0"
 }
 
 variable "alb_subnet" {
   description = "Subnet for the Application Load Balancer."
   type        = string
-  default     = "private-subnet-1"
 }
 
 # --------------------------
@@ -43,55 +39,46 @@ variable "alb_subnet" {
 variable "windows_server_ami_name_pattern" {
   description = "Name pattern to identify the Windows AMI."
   type        = string
-  default     = "FRESH-AMI-*"
 }
 
 variable "ami_owner" {
   description = "Owner ID of the AMI"
   type        = string
-  default     = "694493444487"
 }
 
 variable "instance_type" {
   description = "EC2 instance type."
   type        = string
-  default     = "t2.micro"
 }
 
 variable "key_name" {
   description = "Name of the AWS key pair for EC2 instances."
   type        = string
-  default     = "key-playground"
 }
 
 variable "instance_name_prefix" {
   description = "Prefix for instance names to help with identifying resources."
   type        = string
-  default     = "EC2-WEBAPP"
 }
 
 variable "cpu_credits" {
   description = "CPU credit option for burstable performance instances."
   type        = string
-  default     = "unlimited"
 }
 
 variable "root_volume_size" {
   description = "Root volume size in GiB."
   type        = number
-  default     = 40
 }
 
 variable "ebs_size" {
   description = "The size of the EBS volume in GiB."
   type        = number
-  default     = 40
 }
 
 variable "ebs_device_name" {
   description = "The device name to attach the EBS volume to."
   type        = string
-  default     = "/dev/sdh"
 }
 
 # --------------------------
@@ -101,7 +88,6 @@ variable "ebs_device_name" {
 variable "sg_name" {
   description = "The name of the security group."
   type        = string
-  default     = "app-sg"
 }
 
 variable "sg_ingress_ports" {
@@ -112,21 +98,6 @@ variable "sg_ingress_ports" {
     protocol    = string
     cidr_blocks = list(string)
   }))
-  default = [
-    {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
-      cidr_blocks = ["10.0.0.0/16"]
-    },
-    {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
-      cidr_blocks = ["192.168.1.0/24"]
-    }
-  ]
-
 }
 
 variable "sg_egress_ports" {
@@ -137,34 +108,8 @@ variable "sg_egress_ports" {
     protocol    = string
     cidr_blocks = list(string)
   }))
-  default = [
-    {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
-      cidr_blocks = ["10.0.0.0/16"]
-    },
-    {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
-      cidr_blocks = ["192.168.1.0/24"]
-    }
-  ]
-
 }
 
-variable "sg_ports_egress" {
-  description = "List of egress ports for the security group."
-  type        = list(number)
-  default     = [80, 443]
-}
-
-variable "sg_protocol" {
-  description = "Protocol for the security group rules."
-  type        = string
-  default     = "tcp"
-}
 
 # --------------------------
 # ALB Configuration
@@ -173,7 +118,6 @@ variable "sg_protocol" {
 variable "ssl_policy" {
   description = "The SSL policy to use for HTTPS listeners"
   type        = string
-  default     = "ELBSecurityPolicy-2016-08"
 }
 
 variable "client_id" {
@@ -196,31 +140,21 @@ variable "oidc_settings" {
     scope                      = string
     on_unauthenticated_request = string
   })
-  default = {
-    authorization_endpoint     = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/authorize"
-    issuer                     = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x"
-    token_endpoint             = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/access_token"
-    user_info_endpoint         = "https://auth-i.bmwgroup.net:443/auth/oauth2/realms/root/realms/intranetb2x/userinfo"
-    scope                      = "openid profile bmwids b2xroles"
-    on_unauthenticated_request = "authenticate"
-  }
+
 }
 
 variable "certificate_arn" {
   description = "The ARN of the ACM certificate"
   type        = string
-  default     = "arn:aws:acm:eu-west-1:508072157138:certificate/b5ed352a-865f-49cd-bdf4-ed5abccc1b48"
 }
 
 variable "hosted_zone_id" {
   description = "The id of Hosted Zone"
   type        = string
-  default     = "Z026893033NQ8DKXNWP5G"
 }
 
 variable "subdomain_url" {
    description = "The Subdomain url of application redirected to alb"
-   default = "app.meetingroom-int.eu-west-1.aws.cloud.bmw"
    type        = string
 }
 variable "alb_ingress_cidr_blocks" {
@@ -231,18 +165,14 @@ variable "alb_ingress_cidr_blocks" {
     protocol    = string
     cidr_blocks = list(string)
   }))
-  default = [
-    {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    },
-    {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
-  ]
+}
+
+variable "alb_egress_cidr_blocks" {
+  description = "List of egress ports and CIDR blocks"
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
 }
